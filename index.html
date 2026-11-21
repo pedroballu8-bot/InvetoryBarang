@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inventori Barang</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="auth" id="auth">
+  <div class="auth-card">
+    <h1>Inventori Barang</h1>
+    <p class="sub">Masuk atau buat akun untuk mengelola stok barangmu.</p>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tabLogin" aria-selected="true">Masuk</button>
+      <button type="button" role="tab" id="tabReg" aria-selected="false">Daftar</button>
+    </div>
+    <form id="loginForm" autocomplete="on">
+      <label>Email<input id="lUser" type="email" autocomplete="email" required></label>
+      <label>Kata sandi<input id="lPass" type="password" autocomplete="current-password" required></label>
+      <p class="err" id="lErr" role="alert"></p>
+      <button type="submit" class="primary">Masuk</button>
+    </form>
+    <form id="regForm" autocomplete="on" hidden>
+      <label>Nama lengkap<input id="rNama" autocomplete="name" maxlength="60" required></label>
+      <label>Email<input id="rUser" type="email" autocomplete="email" required></label>
+      <label>Kata sandi<input id="rPass" type="password" autocomplete="new-password" minlength="6" placeholder="minimal 6 karakter" required></label>
+      <label>Ulangi kata sandi<input id="rPass2" type="password" autocomplete="new-password" required></label>
+      <p class="err" id="rErr" role="alert"></p>
+      <button type="submit" class="primary">Buat akun</button>
+    </form>
+    <p class="hint">Akun dan data tersimpan di database Supabase, jadi bisa dibuka dari perangkat mana pun.</p>
+  </div>
+</main>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <div>
+      <h1>Inventori Barang</h1>
+      <p>Catat stok masuk dan keluar, dan pantau barang yang hampir habis.</p>
+    </div>
+    <div class="userbox">
+      <span id="userLabel"></span>
+      <button id="btnLogout">Keluar</button>
+      <button class="primary" id="btnAdd">Tambah barang</button>
+    </div>
+  </header>
+  <nav class="nav" aria-label="Menu">
+    <button type="button" data-view="dash" aria-selected="true">Dashboard</button>
+    <button type="button" data-view="barang" aria-selected="false">Barang</button>
+    <button type="button" data-view="trx" aria-selected="false">Transaksi</button>
+  </nav>
+
+  <div id="viewDash">
+  <section class="stats" aria-label="Ringkasan">
+    <div class="stat"><b id="sJenis">0</b><span>Jenis barang</span></div>
+    <div class="stat"><b id="sUnit">0</b><span>Total unit di gudang</span></div>
+    <div class="stat"><b id="sNilai">Rp0</b><span>Nilai persediaan</span></div>
+    <div class="stat" id="sLowBox"><b id="sLow">0</b><span>Stok menipis atau habis</span></div>
+  </section>
+  <div class="panels">
+    <section class="panel">
+      <h2>Transaksi 7 hari terakhir</h2>
+      <div id="chart" class="chart"></div>
+      <p class="legend"><i class="sw masuk"></i>Masuk <i class="sw keluar"></i>Keluar</p>
+    </section>
+    <section class="panel">
+      <h2>Perlu diisi ulang</h2>
+      <ul id="lowList" class="plain"></ul>
+    </section>
+    <section class="panel wide">
+      <h2>Transaksi terbaru</h2>
+      <ul id="recent" class="plain"></ul>
+    </section>
+  </div>
+  </div>
+
+  <div id="viewBarang" hidden>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Cari nama atau kode barang" aria-label="Cari barang">
+    <select id="fKat" aria-label="Filter kategori"><option value="">Semua kategori</option></select>
+    <select id="fStatus" aria-label="Filter status">
+      <option value="">Semua status</option>
+      <option value="low">Menipis</option>
+      <option value="out">Habis</option>
+    </select>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th><button data-sort="nama">Barang</button></th>
+          <th><button data-sort="kategori">Kategori</button></th>
+          <th class="num"><button data-sort="harga">Harga satuan</button></th>
+          <th class="num"><button data-sort="stok">Stok</button></th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" hidden>Belum ada barang yang cocok. Klik “Tambah barang” untuk mulai mencatat.</div>
+  </div>
+  </div>
+  <div id="viewTrx" hidden>
+    <div class="tools">
+      <select id="tJenis" aria-label="Filter jenis">
+        <option value="">Semua jenis</option>
+        <option value="masuk">Stok masuk</option>
+        <option value="keluar">Stok keluar</option>
+      </select>
+      <button class="primary" id="btnTrx">Catat transaksi</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Waktu</th><th>Barang</th><th>Jenis</th><th class="num">Jumlah</th><th>Catatan</th></tr></thead>
+        <tbody id="trxRows"></tbody>
+      </table>
+      <div class="empty" id="trxEmpty" hidden>Belum ada transaksi. Klik “Catat transaksi” untuk mencatat stok masuk atau keluar.</div>
+    </div>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <h2 id="dlgTitle">Tambah barang</h2>
+  <form id="form" method="dialog" style="margin-top:14px">
+    <label>Nama barang<input id="fNama" required maxlength="80"></label>
+    <div class="two">
+      <label>Kode barang<input id="fSku" maxlength="30"></label>
+      <label>Kategori<input id="fKategori" list="katList" maxlength="30" placeholder="mis. Elektronik"></label>
+    </div>
+    <datalist id="katList"></datalist>
+    <div class="two">
+      <label>Harga satuan (Rp)<input id="fHarga" type="number" min="0" step="any" required value="0"></label>
+      <label>Stok<input id="fStok" type="number" min="0" step="1" required value="0"></label>
+    </div>
+    <label>Batas stok menipis<input id="fMin" type="number" min="0" step="1" required value="5"></label>
+    <div class="actions">
+      <button type="button" id="btnCancel">Batal</button>
+      <button type="submit" class="primary">Simpan</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgT">
+  <h2>Catat transaksi</h2>
+  <form id="formT" method="dialog" style="margin-top:14px">
+    <label>Barang<select id="tBarang" required></select></label>
+    <div class="two">
+      <label>Jenis<select id="tJns"><option value="masuk">Stok masuk</option><option value="keluar">Stok keluar</option></select></label>
+      <label>Jumlah<input id="tJml" type="number" min="1" step="1" value="1" required></label>
+    </div>
+    <label>Catatan<input id="tCat" maxlength="120" placeholder="mis. Pembelian dari supplier"></label>
+    <p class="err" id="tErr" role="alert"></p>
+    <div class="actions">
+      <button type="button" id="btnCancelT">Batal</button>
+      <button type="submit" class="primary">Simpan</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
