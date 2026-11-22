@@ -35,3 +35,14 @@ Pencatatan otomatis
 - Barang baru dengan stok > 0 tercatat sebagai transaksi masuk ("Stok awal").
 - Mengubah angka stok lewat tombol Ubah tercatat sebagai transaksi masuk/keluar sebesar selisihnya.
 - Tombol + dan - serta menu Catat transaksi juga tercatat.
+
+Cetak laporan dan struk
+- Menu Transaksi > "Cetak laporan": mencetak daftar transaksi sesuai filter jenis dan rentang tanggal (A4).
+- Tombol "Struk" di tiap baris: mencetak struk satu transaksi (lebar 80 mm).
+- Untuk PDF, pada jendela cetak pilih printer "Save as PDF" / "Simpan sebagai PDF".
+
+Transaksi per hari
+- Menu Transaksi: centang "Per hari" untuk mengelompokkan transaksi per tanggal
+  (dengan subtotal masuk, keluar, dan jumlah transaksi tiap hari).
+- Tombol "Hari ini" memfilter transaksi hari ini; klik lagi untuk menghapus filter.
+- Laporan cetak juga mengikuti pengelompokan per hari.

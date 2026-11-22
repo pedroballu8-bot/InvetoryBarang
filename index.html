@@ -111,11 +111,16 @@
         <option value="masuk">Stok masuk</option>
         <option value="keluar">Stok keluar</option>
       </select>
+      <label class="chk"><input type="checkbox" id="grupHari" checked>Per hari</label>
+      <button type="button" id="btnHariIni">Hari ini</button>
+      <input type="date" id="tDari" aria-label="Dari tanggal" title="Dari tanggal">
+      <input type="date" id="tSampai" aria-label="Sampai tanggal" title="Sampai tanggal">
+      <button id="btnLap">Cetak laporan</button>
       <button class="primary" id="btnTrx">Catat transaksi</button>
     </div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Waktu</th><th>Barang</th><th>Jenis</th><th class="num">Jumlah</th><th>Catatan</th></tr></thead>
+        <thead><tr><th>Waktu</th><th>Barang</th><th>Jenis</th><th class="num">Jumlah</th><th>Catatan</th><th></th></tr></thead>
         <tbody id="trxRows"></tbody>
       </table>
       <div class="empty" id="trxEmpty" hidden>Belum ada transaksi. Klik “Catat transaksi” untuk mencatat stok masuk atau keluar.</div>
@@ -160,6 +165,9 @@
     </div>
   </form>
 </dialog>
+
+<style id="pageStyle"></style>
+<div id="printArea" class="print-only"></div>
 
 <div class="toast" id="toast" role="status"></div>
 

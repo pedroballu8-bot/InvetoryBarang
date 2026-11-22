@@ -1,19 +1,21 @@
 :root{
-  --bg:#eef2f5; --surface:#ffffff; --ink:#18262f; --muted:#5d6f7b; --line:#d3dce3;
-  --accent:#0f766e; --accent-ink:#ffffff; --warn:#b45309; --warn-bg:#fdf0dc; --danger:#b42318; --ok-bg:#dff3ee;
+  /* Tema biru navy dan putih (mode terang) */
+  --bg:#f3f6fc; --surface:#ffffff; --ink:#0b1f44; --muted:#52627f; --line:#d5deef;
+  --accent:#0f2a5f; --accent-ink:#ffffff; --warn:#b45309; --warn-bg:#fdf0dc; --danger:#b42318; --ok-bg:#e3ebfa;
   color-scheme: light;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0f1a20; --surface:#17252d; --ink:#e6eef2; --muted:#93a6b2; --line:#2a3d48;
-    --accent:#2dd4bf; --accent-ink:#06211e; --warn:#f5b45a; --warn-bg:#3a2c14; --danger:#ff8a80; --ok-bg:#12372f;
+    /* Mode gelap: latar navy, teks putih */
+    --bg:#091a3b; --surface:#102a5c; --ink:#ffffff; --muted:#a8b8d8; --line:#26427f;
+    --accent:#ffffff; --accent-ink:#0b1f44; --warn:#f5b45a; --warn-bg:#3a2c14; --danger:#ff8a80; --ok-bg:#1c3d80;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0f1a20; --surface:#17252d; --ink:#e6eef2; --muted:#93a6b2; --line:#2a3d48;
-  --accent:#2dd4bf; --accent-ink:#06211e; --warn:#f5b45a; --warn-bg:#3a2c14; --danger:#ff8a80; --ok-bg:#12372f;
+  --bg:#091a3b; --surface:#102a5c; --ink:#ffffff; --muted:#a8b8d8; --line:#26427f;
+  --accent:#ffffff; --accent-ink:#0b1f44; --warn:#f5b45a; --warn-bg:#3a2c14; --danger:#ff8a80; --ok-bg:#1c3d80;
   color-scheme: dark;
 }
 *{box-sizing:border-box}
@@ -78,7 +80,7 @@ label input,label select{background:var(--bg);border:1px solid var(--line);borde
 .userbox span{color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 
-.nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.nav{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
 .nav button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
@@ -102,3 +104,34 @@ label input,label select{background:var(--bg);border:1px solid var(--line);borde
 .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px}
 .sw:first-child{margin-left:0}
 #viewDash .stats{margin-bottom:12px}
+
+/* ===== Cetak: laporan (A4) dan struk (80 mm) ===== */
+.print-only{display:none}
+.tools input[type="date"]{flex:0 1 150px}
+@media print{
+  html,body{background:#fff !important;color:#000 !important}
+  body > *:not(#printArea):not(#pageStyle){display:none !important}
+  #printArea{display:block !important}
+  :root{padding:0 !important}
+}
+.lap{font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12px}
+.lap h1{font-size:20px;margin:0 0 4px;color:#0f2a5f}
+.lap p{margin:2px 0}
+.lap table{width:100%;border-collapse:collapse;min-width:0;margin-top:12px}
+.lap th,.lap td{border:1px solid #999;padding:5px 7px;color:#000;font-size:12px;white-space:normal}
+.lap th{background:#0f2a5f;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.lap td.num,.lap th.num{text-align:right}
+.lap .sum{margin-top:12px;font-weight:bold}
+.lap .note{color:#555;font-size:11px}
+.struk{font-family:"Courier New",monospace;color:#000;font-size:12px;width:72mm;line-height:1.4}
+.struk h1{font-size:16px;text-align:center;margin:0}
+.struk .c{text-align:center;margin:2px 0}
+.struk hr{border:0;border-top:1px dashed #000;margin:6px 0}
+.struk .r{display:flex;justify-content:space-between;gap:8px}
+
+/* ===== Kelompok per hari ===== */
+.tools input[type="checkbox"]{flex:none;width:auto;accent-color:var(--accent)}
+.chk{display:inline-flex;align-items:center;gap:6px;font-weight:600;padding:0 4px}
+tr.day td{background:var(--ok-bg);padding:8px 14px}
+tr.day td span{float:right;color:var(--muted);font-size:.9rem}
+.lap td.dayrow{background:#e3ebfa;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}

@@ -232,13 +232,19 @@
         '</div><small>' + x.d.toLocaleDateString("id-ID", { weekday: "short" }) + '</small></div>';
     }).join("");
 
-    var tj = $("tJenis").value;
-    var list = trx.filter(function(t){ return !tj || t.jenis === tj; });
-    $("trxRows").innerHTML = list.map(function(t){
-      return '<tr><td>' + fmtTgl(t.created_at) + '</td><td class="name">' + esc(namaBarang(t.barang_id)) + '</td>' +
-        '<td><span class="badge ' + (t.jenis === "keluar" ? "low" : "") + '">' + (t.jenis === "masuk" ? "Masuk" : "Keluar") + '</span></td>' +
-        '<td class="num">' + t.jumlah + '</td><td>' + esc(t.catatan || "-") + '</td></tr>';
-    }).join("");
+    var list = filteredTrx();
+    var grup = $("grupHari").checked, html = "", cur = "";
+    list.forEach(function(t){
+      var k = ymd(t.created_at);
+      if (grup && k !== cur) {
+        cur = k;
+        var s = sumDay(list, k);
+        html += '<tr class="day"><td colspan="6"><b>' + fmtHari(t.created_at) + '</b><span>Masuk ' + s.masuk +
+          ' | Keluar ' + s.keluar + ' | ' + s.n + ' transaksi</span></td></tr>';
+      }
+      html += trxRow(t, grup);
+    });
+    $("trxRows").innerHTML = html;
     $("trxEmpty").textContent = trx.length
       ? "Tidak ada transaksi dengan jenis ini. Ubah filter ke “Semua jenis”."
       : "Belum ada transaksi. Klik “Catat transaksi” untuk mencatat stok masuk atau keluar.";
@@ -278,6 +284,107 @@
         }
         $("dlgT").close(); toast("Transaksi dicatat"); loadItems();
       });
+  });
+
+  // ===== Kelompok transaksi per hari =====
+  function fmtHari(d){
+    return new Date(d).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  }
+  function fmtJam(d){
+    return new Date(d).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  }
+  function sumDay(list, k){
+    var s = { masuk: 0, keluar: 0, n: 0 };
+    list.forEach(function(t){ if (ymd(t.created_at) === k) { s[t.jenis] += t.jumlah; s.n++; } });
+    return s;
+  }
+  function trxRow(t, grup){
+    return '<tr><td>' + (grup ? fmtJam(t.created_at) : fmtTgl(t.created_at)) + '</td><td class="name">' + esc(namaBarang(t.barang_id)) + '</td>' +
+      '<td><span class="badge ' + (t.jenis === "keluar" ? "low" : "") + '">' + (t.jenis === "masuk" ? "Masuk" : "Keluar") + '</span></td>' +
+      '<td class="num">' + t.jumlah + '</td><td>' + esc(t.catatan || "-") + '</td>' +
+      '<td><button data-struk="' + t.id + '">Struk</button></td></tr>';
+  }
+  $("grupHari").addEventListener("input", render);
+  $("btnHariIni").addEventListener("click", function(){
+    var t = ymd(new Date()), on = $("tDari").value === t && $("tSampai").value === t;
+    $("tDari").value = on ? "" : t; $("tSampai").value = on ? "" : t;
+    render();
+  });
+
+  // ===== Cetak laporan PDF dan struk =====
+  function ymd(d){
+    var x = new Date(d);
+    return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
+  }
+  function filteredTrx(){
+    var tj = $("tJenis").value, a = $("tDari").value, b = $("tSampai").value;
+    return trx.filter(function(t){
+      var d = ymd(t.created_at);
+      return (!tj || t.jenis === tj) && (!a || d >= a) && (!b || d <= b);
+    });
+  }
+  function hargaBarang(id){
+    var it = items.find(function(x){ return x.id === id; });
+    return it ? it.harga : 0;
+  }
+  function userName(){ return $("userLabel").textContent.replace(/^Halo, /, ""); }
+  function fmtFull(d){ return new Date(d).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }); }
+  function printHtml(html, pageCss){
+    $("pageStyle").textContent = pageCss;
+    $("printArea").innerHTML = html;
+    window.print();
+  }
+  window.addEventListener("afterprint", function(){ $("printArea").innerHTML = ""; });
+
+  ["tDari", "tSampai"].forEach(function(id){ $(id).addEventListener("input", render); });
+
+  $("btnLap").addEventListener("click", function(){
+    var list = filteredTrx();
+    if (!list.length) { toast("Tidak ada transaksi untuk dicetak."); return; }
+    var masuk = 0, keluar = 0, nM = 0, nK = 0;
+    var rows = "", cur = "", no = 0;
+    list.forEach(function(t){
+      var k = ymd(t.created_at);
+      if ($("grupHari").checked && k !== cur) {
+        cur = k;
+        var s = sumDay(list, k);
+        rows += '<tr><td colspan="7" class="dayrow">' + fmtHari(t.created_at) + ' | Masuk ' + s.masuk +
+          ' unit | Keluar ' + s.keluar + ' unit | ' + s.n + ' transaksi</td></tr>';
+      }
+      var nilai = t.jumlah * hargaBarang(t.barang_id);
+      if (t.jenis === "masuk") { masuk += t.jumlah; nM += nilai; } else { keluar += t.jumlah; nK += nilai; }
+      rows += '<tr><td>' + (++no) + '</td><td>' + fmtFull(t.created_at) + '</td><td>' + esc(namaBarang(t.barang_id)) +
+        '</td><td>' + (t.jenis === "masuk" ? "Masuk" : "Keluar") + '</td><td class="num">' + t.jumlah +
+        '</td><td class="num">' + rupiah(nilai) + '</td><td>' + esc(t.catatan || "-") + '</td></tr>';
+    });
+    var a = $("tDari").value, b = $("tSampai").value;
+    var periode = (a || b) ? (a || "awal") + " s/d " + (b || "sekarang") : "Semua waktu";
+    var jenis = $("tJenis").value ? ($("tJenis").value === "masuk" ? "Stok masuk" : "Stok keluar") : "Semua jenis";
+    printHtml('<div class="lap"><h1>Laporan Transaksi Stok</h1>' +
+      '<p>Dicetak: ' + fmtFull(new Date()) + ' oleh ' + esc(userName()) + '</p>' +
+      '<p>Periode: ' + esc(periode) + ' | Jenis: ' + jenis + '</p>' +
+      '<table><thead><tr><th>No</th><th>Waktu</th><th>Barang</th><th>Jenis</th><th class="num">Jumlah</th><th class="num">Nilai</th><th>Catatan</th></tr></thead><tbody>' +
+      rows + '</tbody></table>' +
+      '<p class="sum">Total masuk: ' + masuk + ' unit (' + rupiah(nM) + ') | Total keluar: ' + keluar + ' unit (' + rupiah(nK) + ')</p>' +
+      '<p class="note">Nilai dihitung dari harga satuan barang saat ini.</p></div>', "@page{size:A4;margin:14mm}");
+  });
+
+  $("trxRows").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-struk]");
+    if (!b) return;
+    var t = trx.find(function(x){ return x.id === b.dataset.struk; });
+    if (!t) return;
+    var h = hargaBarang(t.barang_id), total = t.jumlah * h, masuk = t.jenis === "masuk";
+    printHtml('<div class="struk"><h1>INVENTORI BARANG</h1><p class="c">Struk Transaksi Stok</p><hr>' +
+      '<div class="r"><span>No</span><span>#' + t.id.slice(0, 8).toUpperCase() + '</span></div>' +
+      '<div class="r"><span>Tanggal</span><span>' + fmtFull(t.created_at) + '</span></div>' +
+      '<div class="r"><span>Petugas</span><span>' + esc(userName()) + '</span></div><hr>' +
+      '<div>' + esc(namaBarang(t.barang_id)) + '</div>' +
+      '<div class="r"><span>' + t.jumlah + ' x ' + rupiah(h) + '</span><span>' + rupiah(total) + '</span></div>' +
+      '<div class="r"><span>Jenis</span><span>' + (masuk ? "STOK MASUK" : "STOK KELUAR") + '</span></div><hr>' +
+      '<div class="r"><b>TOTAL</b><b>' + rupiah(total) + '</b></div>' +
+      (t.catatan ? '<hr><div>Catatan: ' + esc(t.catatan) + '</div>' : '') +
+      '<hr><p class="c">Terima kasih</p></div>', "@page{size:80mm auto;margin:4mm}");
   });
 
   // ===== Autentikasi (Supabase Auth) =====
